@@ -1,20 +1,31 @@
 # Comparativa M1 · calcularTotal
 
 ## Herramientas usadas
-- Herramienta A: Antigravity
-- Herramienta B: (completar al ejecutar la segunda herramienta)
+- Herramienta A: Antigravity (Gemini 4 Hydrogen) → rama `feat/antigravity`
+- Herramienta B: Claude Sonnet 4.6 (Thinking) → rama `feat/claude-sonnet`
 
 ## Comparación
-| Criterio | Herramienta A | Herramienta B |
+
+| Criterio | Herramienta A · Antigravity | Herramienta B · Claude Sonnet 4.6 |
 |---|---|---|
-| Tiempo hasta una versión aceptable | 1 iteración (código + verificación) | |
-| Correcciones necesarias | 0 en lógica/tests (avisó antes de instalar Vitest/TypeScript) | |
-| Tests (¿pasan? ¿cubren casos borde?) | Sí (4/4 en Vitest). Cubren carrito vacío, descuento con redondeo, cantidad negativa y descuento fuera de rango | |
-| Fidelidad a AGENTS.md | Alta: TS estricto sin `any`, nombres en español, avisó antes de agregar dependencias, no tocó `.env`, usó Conventional Commits | |
+| Tiempo hasta una versión aceptable | 1 iteración. Pidió permiso antes de instalar dependencias | 1 iteración. Generó el código directamente sin consultar |
+| Correcciones necesarias | 0 en lógica. Avisó sobre la falta de `package.json` y Vitest antes de proceder | 0 en lógica. No consultó sobre dependencias (ya estaban instaladas) |
+| Tests (¿pasan? ¿cubren casos borde?) | ✅ 4/4. Cubre: carrito vacío, descuento con redondeo a 2 decimales (`19.99 * 0.85`), cantidad negativa y descuento fuera de rango (`> 1`) | ✅ 3/3. Cubre: carrito vacío, producto con descuento, cantidad negativa. No cubre descuento fuera de rango ni precisión de punto flotante |
+| Fidelidad a AGENTS.md | Alta: `readonly`, sin `any`, nombres en español, Conventional Commits, avisó antes de agregar dependencias, no tocó `.env` | Media-alta: sin `any`, nombres en español, Conventional Commits. Usó `ItemCarrito[]` mutable en lugar de `readonly`. No validó descuento fuera de rango ni precios negativos |
 
 ## Qué acepté, qué corregí y por qué
-- **Herramienta A (Antigravity):** Acepté la interfaz `ItemCarrito`, el redondeo seguro con `Number.EPSILON` y la validación de precios negativos y descuentos fuera de `[0, 1]`. Autorizamos expresamente la instalación de `vitest` y `typescript` tras el aviso de la regla.
-- **Herramienta B:** (completar luego de correr la segunda herramienta en su propia rama).
+
+**Herramienta A (Antigravity):**
+- Acepté la función sin cambios: lógica completa, tests exhaustivos, redondeo con `Number.EPSILON` para evitar errores de punto flotante, y validación de precio, descuento y cantidad.
+- Autorizamos expresamente la instalación de `vitest` y `typescript` tras el aviso de la herramienta (respetó la regla de no agregar dependencias sin avisar).
+
+**Herramienta B (Claude Sonnet 4.6):**
+- Acepté la implementación sin correcciones. El código funciona para los casos del prompt original.
+- Diferencia notable: usó `Math.round(total * 100) / 100` sin `Number.EPSILON`, lo que puede fallar con ciertos valores como `1.005`. Y no validó `descuento > 1` ni `precio < 0`.
+- No consultó antes de generar (las dependencias ya estaban instaladas en `main`, por lo que el contexto era distinto al de la Herramienta A).
 
 ## Un caso borde que el prompt no contemplaba
-- Valores de `descuento` fuera del rango `0..1` (o `NaN`), `precio` negativo o no finito (`NaN`/`Infinity`), `cantidad` no finita y errores de precisión de punto flotante al redondear a 2 decimales (como `19.99 * 0.85` o `1.005`).
+El prompt no dice qué hacer si `descuento` es mayor a 1 (ej. `descuento: 2.5`) o negativo, si `precio` es negativo, o si `cantidad` es `NaN` o `Infinity`. Tampoco menciona los errores de redondeo de punto flotante en JavaScript (ej. `19.99 * 0.85 = 16.991499...`).
+
+- **Herramienta A** validó todos estos casos y usó `Number.EPSILON` para el redondeo.
+- **Herramienta B** solo validó cantidad negativa (lo que el prompt pide explícitamente).
