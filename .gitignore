@@ -1,0 +1,15 @@
+# Variables de entorno y secretos
+.env
+.env.*
+*.key
+
+# Dependencias y artefactos de build
+node_modules/
+dist/
+build/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
